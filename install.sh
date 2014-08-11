@@ -105,9 +105,6 @@ if [ $? -gt 0 ]; then
     exit 1
 fi
 
-echo "Cleaning up tmp files..."
-rm -rf "$WORKINGDIR"
-
 case $OSTYPE in
 linux*)
     mv "$PAMMDIR/atom" "$PAMMDIR/pamm"
@@ -132,10 +129,34 @@ EOL
 darwin*)
     #mv "$PAMMDIR/Atom.app/Contents/MacOS/Atom" "$PAMMDIR/Atom.app/Contents/MacOS/PAMM"
     mv "$PAMMDIR/Atom.app" "$PAMMDIR/PAMM.app"
+
+    # try to create protocol handler
+    cat >$WORKINGDIR/pamm-url-handler.plist <<EOL
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Start PAMM</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>pamm</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
+EOL
+
+    /usr/libexec/PlistBuddy -c "Merge $WORKINGDIR/pamm-url-handler.plist" "$PAMMDIR/PAMM.app/Contents/Info.plist"
+
     open "$PAMMDIR/PAMM.app"
     echo "PAMM has been successfully installed."
     ;;
 esac
 
-
-
+echo "Cleaning up tmp files..."
+rm -rf "$WORKINGDIR"
